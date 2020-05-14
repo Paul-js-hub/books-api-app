@@ -1,33 +1,41 @@
+import dbConnection from './mongodb';
+import Book from './bookModel';
 const Joi = require('joi');
 const express = require('express');
+const cors = require('cors');
 
 const app = express();
+// connect db
+dbConnection();
 app.use(express.json());
+app.use(cors());
 
-const books = [
-    { id: 1, title: 'Java' },
-    { id: 2, title: 'CSS' },
-    { id: 3, title: 'JavaScript' },
-];
+const PORT = process.env.PORT || 80;
 
 app.get('/', (req, res) => {
     res.send('Hello Api!!!');
 });
 
-app.get('/api/books', (req, res) => {
-    return res.send(books); // getting all the courses
+app.get('/api/books', async (req, res) => {
+    try{
+        const books = await Book.find();
+        return res.send(books);
+    } catch (err){
+        res.json({ message: err })
+    }
+    
 });
 
-app.get('/api/books/:id', (req, res) => {
+app.get('/api/books/:id', async(req, res) => {
     //return a particular book with an id
-    const book = books.find(b => b.id === parseInt(req.params.id)); // Looking up for the book
+    const book = await Book.findById(req.params.id); // Looking up for the book
     if (!book) res.status(404).send('The book with that particular ID not found.'); ////If it does not exist return Not Found 
-
     res.send(book);
 });
 
 app.post('/api/books', (req, res) => {
     // Validating the request body using joi
+    console.log("request", req.body);
     const schema = {
         title: Joi.string().min(3).required()
     };
@@ -39,16 +47,23 @@ app.post('/api/books', (req, res) => {
         return;
     }
     const book = {
-        id: books.length + 1,
         title: req.body.title
     };
-    books.push(book);
-    return res.send(book);
+
+    let model = new Book(book);
+    model.save().then((doc)=>{
+        res.status(201).send(doc)
+    }).catch((err)=>{
+        res.status(500).send(err)
+    })
 });
 
-app.put('/api/books/:id', (req, res) =>{
+app.put('/api/books/:id', async (req, res) =>{
 
-    const book = books.find(b => b.id === parseInt(req.params.id)); 
+    const book = await Book.updateOne(
+        {_id:req.params.id},
+        {$set:{title:req.body.title}}
+        ); 
     if (!book) res.status(404).send('The book with that particular ID not found.'); 
 
     const {error} = validateBook(req.body); // result.error
@@ -56,20 +71,15 @@ app.put('/api/books/:id', (req, res) =>{
         res.status(400).send(error.details[0].message);
         return;
     }
-    // Updating the book
-    book.title = req.body.title;
     // returning the updated book to the client
-    return res.send(book);
+    return res.status(201).send(book);
 });
 
-app.delete('/api/books/:id', (req, res) => {
-    const book = books.find(b => b.id === parseInt(req.params.id)); 
+app.delete('/api/books/:id', async(req, res) => {
+    const book = await Book.deleteOne({_id:req.params.id}); 
     if (!book) res.status(404).send('The book with that particular ID not found.'); 
 
-    const index = books.indexOf(book);
-    books.splice(index, 1);
-
-    return res.send(book);
+    return res.status(200).send(book);
 });
 
 function validateBook(book){
@@ -79,6 +89,4 @@ function validateBook(book){
   return Joi.validate(book, schema);
 }
     
-
-
-app.listen(3000, () => console.log('Listening on Port 3000...'))
+app.listen(PORT, () => console.log(`Listening on PORT ${PORT}`))
