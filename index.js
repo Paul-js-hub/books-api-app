@@ -4,6 +4,7 @@ import User from './user';
 import Joi from '@hapi/joi';
 import express from 'express';
 import cors from 'cors';
+import bcrypt from 'bcryptjs';
 
 const app = express();
 // connect db
@@ -100,11 +101,14 @@ app.post('/api/register', async(req, res) => {
     // If email exists
     const emailExists = await User.findOne({email:req.body.email});
     if(emailExists) res.status(400).send('Email already exists');
-    
+
+    //hash passwords
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
     //create new user
     const user = new User({
         email: req.body.email,
-        password: req.body.password
+        password: hashedPassword
     });
 
     
