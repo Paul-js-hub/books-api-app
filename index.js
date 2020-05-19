@@ -5,6 +5,7 @@ import Joi from '@hapi/joi';
 import express from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const app = express();
 // connect db
@@ -119,6 +120,31 @@ app.post('/api/register', async(req, res) => {
             res.status(500).send(err)
         })
     
+});
+
+//LOGIN
+const schemaLogin = Joi.object({
+    email: Joi.string().min(6).required().email(),
+    password:Joi.string().min(6).required()
+});
+
+app.post('/api/login', async(req, res) =>{
+    const {error} = schemaLogin.validate(req.body);
+    if(error) return res.status(422).send(error)
+
+    //check if the user exists
+    const user = await User.findOne({email:req.body.email});
+    if(!user) return res.status(400).send("User with the email doesn't exist");
+    
+    //Check if the passwords match
+    const match = await bcrypt.compare(req.body.password, user.password);
+    if(!match) return res.status(400).send('Invalid login credentials');
+    if(match){
+        const secret = 'reactdevelopment'
+        const accessToken = jwt.sign({email:user.email}, secret)
+        return res.send({message:'Login Success', accessToken}).status(201);
+    }
+    return res.send('An error occurred').status(500)
 });
 
 function validateBook(book) {
