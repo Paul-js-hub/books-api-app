@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
     res.send('Hello Api!!!');
 });
 
-app.get('/api/books', async (req, res) => {
+app.get('/api/books', verifyToken, async (req, res) => {
     try {
         const books = await Book.find();
         return res.send(books);
@@ -32,7 +32,7 @@ app.get('/api/books', async (req, res) => {
 
 });
 
-app.get('/api/books/:id', async (req, res) => {
+app.get('/api/books/:id',verifyToken, async (req, res) => {
     //return a particular book with an id
     const book = await Book.findById(req.params.id); // Looking up for the book
     if (!book) res.status(404).send('The book with that particular ID not found.'); ////If it does not exist return Not Found 
@@ -115,7 +115,6 @@ app.post('/api/register', async (req, res) => {
         password: hashedPassword
     });
 
-
     await user.save()
         .then((doc) => {
             res.status(201).send(doc)
@@ -144,8 +143,8 @@ app.post('/api/login', async (req, res) => {
     if (!match) return res.status(400).send('Invalid login credentials');
     if (match) {
         const accessToken = jwt.sign({ email: user.email }, process.env.TOKEN_SECRET, { expiresIn: '10m' });
-        return res.header('auth-token', accessToken).status(201)
-        .send({ message: 'Login Success', accessToken });
+        return res.status(201)
+            .send({ message: 'Login Success', accessToken });
     }
     return res.send('An error occurred').status(500)
 });
@@ -157,16 +156,16 @@ function validateBook(book) {
     return Joi.validate(book, schema);
 }
 //middleware
-function verifyToken(req,res,next){
+function verifyToken(req, res, next) {
     const accessToken = req.header('auth-token');
-    if(!accessToken){
+    if (!accessToken) {
         return res.status(401).send('Access Denied');
     }
-    try{
+    try {
         const verified = jwt.verify(accessToken, process.env.TOKEN_SECRET);
         req.u = verified;
         next();
-    } catch(error){
+    } catch (error) {
         res.status(403).send('Invalid Token')
     }
 }
