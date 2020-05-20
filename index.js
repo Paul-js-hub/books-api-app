@@ -6,7 +6,10 @@ import express from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
+
+dotenv.config();
 const app = express();
 // connect db
 dbConnection();
@@ -36,7 +39,7 @@ app.get('/api/books/:id', async (req, res) => {
     res.send(book);
 });
 
-app.post('/api/books', (req, res) => {
+app.post('/api/books', verifyToken, (req, res) => {
     // Validating the request body using joi
     console.log("request", req.body);
     const schema = Joi.object({
@@ -89,19 +92,19 @@ app.delete('/api/books/:id', async (req, res) => {
 //REGISTER
 const schema = Joi.object({
     email: Joi.string().min(6).required().email(),
-    password:Joi.string().min(6).required()
+    password: Joi.string().min(6).required()
 });
-app.post('/api/register', async(req, res) => {
+app.post('/api/register', async (req, res) => {
 
     //validation
-    const {error}= schema.validate(req.body);
-    if(error){
+    const { error } = schema.validate(req.body);
+    if (error) {
         return res.status(400).send(error.details[0].message)
     }
 
     // If email exists
-    const emailExists = await User.findOne({email:req.body.email});
-    if(emailExists) res.status(400).send('Email already exists');
+    const emailExists = await User.findOne({ email: req.body.email });
+    if (emailExists) res.status(400).send('Email already exists');
 
     //hash passwords
     const salt = await bcrypt.genSalt(10);
@@ -112,37 +115,37 @@ app.post('/api/register', async(req, res) => {
         password: hashedPassword
     });
 
-    
-        await user.save()
+
+    await user.save()
         .then((doc) => {
             res.status(201).send(doc)
         }).catch((err) => {
             res.status(500).send(err)
         })
-    
+
 });
 
 //LOGIN
 const schemaLogin = Joi.object({
     email: Joi.string().min(6).required().email(),
-    password:Joi.string().min(6).required()
+    password: Joi.string().min(6).required()
 });
 
-app.post('/api/login', async(req, res) =>{
-    const {error} = schemaLogin.validate(req.body);
-    if(error) return res.status(422).send(error)
+app.post('/api/login', async (req, res) => {
+    const { error } = schemaLogin.validate(req.body);
+    if (error) return res.status(422).send(error)
 
     //check if the user exists
-    const user = await User.findOne({email:req.body.email});
-    if(!user) return res.status(400).send("User with the email doesn't exist");
-    
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) return res.status(400).send("User with the email doesn't exist");
+
     //Check if the passwords match
     const match = await bcrypt.compare(req.body.password, user.password);
-    if(!match) return res.status(400).send('Invalid login credentials');
-    if(match){
-        const secret = 'reactdevelopment'
-        const accessToken = jwt.sign({email:user.email}, secret)
-        return res.send({message:'Login Success', accessToken}).status(201);
+    if (!match) return res.status(400).send('Invalid login credentials');
+    if (match) {
+        const accessToken = jwt.sign({ email: user.email }, process.env.TOKEN_SECRET, { expiresIn: '10m' });
+        return res.header('auth-token', accessToken).status(201)
+        .send({ message: 'Login Success', accessToken });
     }
     return res.send('An error occurred').status(500)
 });
@@ -152,6 +155,20 @@ function validateBook(book) {
         title: Joi.string().min(3).required()
     };
     return Joi.validate(book, schema);
+}
+//middleware
+function verifyToken(req,res,next){
+    const accessToken = req.header('auth-token');
+    if(!accessToken){
+        return res.status(401).send('Access Denied');
+    }
+    try{
+        const verified = jwt.verify(accessToken, process.env.TOKEN_SECRET);
+        req.u = verified;
+        next();
+    } catch(error){
+        res.status(403).send('Invalid Token')
+    }
 }
 
 app.listen(PORT, () => console.log(`Listening on PORT ${PORT}`))
