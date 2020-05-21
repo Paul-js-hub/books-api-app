@@ -1,4 +1,4 @@
-import Book from '../bookModel';
+import Book from '../models/bookModel';
 import Joi from '@hapi/joi';
 
 exports.books_get_all = async (req, res) => {
