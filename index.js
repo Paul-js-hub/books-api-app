@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-const PORT = 80;
+const PORT = process.env.PORT || 80;
 
 app.get('/', (req, res) => {
     res.send('Hello Api!!!');
