@@ -1,5 +1,6 @@
 import dbConnection from './mongodb';
 import express from 'express';
+import bodyParser from "body-parser";
 import cors from 'cors';
 import dotenv from 'dotenv';
 import verifyToken from './middlewares/verifyToken';
@@ -10,8 +11,11 @@ dotenv.config();
 const app = express();
 // connect db
 dbConnection();
-app.use(express.json());
+app.disable('etag');
 app.use(cors());
+app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 80;
 
@@ -25,9 +29,7 @@ app.post('/api/books' ,verifyToken, booksController.books_create);
 app.put('/api/books/:id', booksController.books_update_byId);
 app.delete('/api/books/:id', booksController.books_delete_byId);
 
-
 app.post('/api/register', userController.user_register);
 app.post('/api/login', userController.user_login);
-
 
 app.listen(PORT, () => console.log(`Listening on PORT ${PORT}`))

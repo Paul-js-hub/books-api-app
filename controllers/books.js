@@ -20,7 +20,8 @@ exports.books_create = (req, res) => {
     // Validating the request body using joi
     console.log("request", req.body);
     const schema = Joi.object({
-        title: Joi.string().min(3).required()
+        title: Joi.string().min(3).required(),
+        author: Joi.string().min(3).required()
     });
     const result = schema.validate(req.body);
 
@@ -30,7 +31,8 @@ exports.books_create = (req, res) => {
         return;
     }
     const book = {
-        title: req.body.title
+        title: req.body.title,
+        author: req.body.author
     };
 
     let model = new Book(book);

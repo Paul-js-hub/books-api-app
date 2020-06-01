@@ -2,7 +2,7 @@
 import mongoose from 'mongoose'
 //Set up default mongoose connection
 const dbConnection = () => {
-    const mongoDB = 'mongodb://127.0.0.1/book-db';
+    const mongoDB = process.env.MONGODB_URI;
     mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 
     //Get the default connection
