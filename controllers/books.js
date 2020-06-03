@@ -64,6 +64,10 @@ exports.books_delete_byId = async (req, res) => {
     const book = await Book.deleteOne({ _id: req.params.id });
     if (!book) res.status(404).send('The book with that particular ID not found.');
 
+    else{
+        res.send('Book deleted successfully')
+    }
+
     return res.status(200).send(book);
 }
 
