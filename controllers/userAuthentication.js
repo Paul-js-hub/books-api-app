@@ -35,7 +35,7 @@ exports.user_register = async (req, res) => {
 
     await user.save()
         .then((doc) => {
-            res.status(201).send(doc)
+            res.status(201).send({message:'Account registered successfully', doc})
         }).catch((err) => {
             res.status(500).send(err)
         })
