@@ -7,8 +7,6 @@ import verifyToken from './middlewares/verifyToken';
 import booksController from './controllers/books';
 import userController from './controllers/userAuthentication';
 import multer from 'multer';
-import { resolve } from  'path';
-import {uploader, cloudinaryConfig} from './config/cloudinaryConfig';
 import cloudinary from 'cloudinary';
 import fileupload from 'express-fileupload'
 
@@ -27,12 +25,6 @@ app.use(fileupload({
 
 
 const PORT = process.env.PORT || 80;
-
-    //   cloudinary.config({
-    //     cloud_name: 'dupj5uimd',
-    //     api_key: '117653133426464',
-    //     api_secret: 'J4shpUzyHwT9Cpc62Tw-j3jdEoI'
-    //   });
 
 
 app.get('/', (req, res) => {

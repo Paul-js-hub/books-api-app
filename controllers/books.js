@@ -26,7 +26,7 @@ exports.books_get_byId = async (req, res) => {
 exports.books_create = (req, res) => {
     
     // Validating the request body using joi
-    console.log("request", req.body);
+    console.log("request", req.files);
     const schema = Joi.object({
         title: Joi.string().min(3).required(),
         author: Joi.string().min(3).required(),
@@ -39,12 +39,6 @@ exports.books_create = (req, res) => {
         return;
     }
 
-    const book = {
-        title: req.body.title,
-        author: req.body.author,
-         bookImage:req.file.url
-    };
-
     cloudinary.config({
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
         api_key: process.env.CLOUDINARY_API_KEY,
@@ -52,18 +46,22 @@ exports.books_create = (req, res) => {
     })
 
 
-    const file = req.files.bookImage;
-    console.log(file)
-    cloudinary.uploader.upload(file.tempFilePath, (err, result)=>{
-        res.send({message: 'Your image has been successfully uploaded to cloudinary', result})
-    });
-   
-    let model = new Book(book);
-    model.save().then((doc) => {
-        res.status(201).send(doc)
-    }).catch((err) => {
-        res.status(500).send(err)
-    })
+    const bookImage = req.files.bookImage;
+    console.log('bk', bookImage)
+    cloudinary.uploader.upload(bookImage.tempFilePath, (result, error)=>{
+        if(result){
+            let book = new Book(book);
+            book.title= req.body.title,
+            book.author= req.body.author,
+            book.bookImage = result.url;
+            book.save().then((doc) => {
+                res.status(201).send(doc)
+            }).catch((err) => {
+                res.status(500).send(err)
+            })
+        }
+        })
+    
 
 }
 
