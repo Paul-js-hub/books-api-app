@@ -7,8 +7,10 @@ import verifyToken from './middlewares/verifyToken';
 import booksController from './controllers/books';
 import userController from './controllers/userAuthentication';
 import multer from 'multer';
-import path from 'path';
-//import upload from './middlewares/upload'
+import { resolve } from  'path';
+import {uploader, cloudinaryConfig} from './config/cloudinaryConfig';
+import cloudinary from 'cloudinary';
+import fileupload from 'express-fileupload'
 
 dotenv.config();
 const app = express();
@@ -19,38 +21,19 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use('/uploads', express.static('uploads'));
+app.use(fileupload({
+    useTempFiles:true
+}));
+
 
 const PORT = process.env.PORT || 80;
 
-const fileFilter = (req, file, cb) => {
-    if (file.mimetype === "image/jpg" ||
-        file.mimetype === "image/jpeg" ||
-        file.mimetype === "image/png") {
+    //   cloudinary.config({
+    //     cloud_name: 'dupj5uimd',
+    //     api_key: '117653133426464',
+    //     api_secret: 'J4shpUzyHwT9Cpc62Tw-j3jdEoI'
+    //   });
 
-        cb(null, true);
-    } else {
-        cb(null, false);
-    }
-}
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, './uploads/');
-    },
-    filename: (req, file, cb) => {
-        cb(null, new Date().toISOString().replace(/:/g, '-') + file.originalname);
-    }
-
-});
-
-const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 1024 * 1024 * 5
-    },
-    fileFilter: fileFilter
-}).single('bookImage')
 
 app.get('/', (req, res) => {
     res.send('Hello Api!!!');
@@ -58,7 +41,7 @@ app.get('/', (req, res) => {
 
 app.get('/api/books', verifyToken, booksController.books_get_all);
 app.get('/api/books/:id', verifyToken, booksController.books_get_byId);
-app.post('/api/books', verifyToken, upload, booksController.books_create);
+app.post('/api/books', verifyToken, booksController.books_create);
 app.put('/api/books/:id', booksController.books_update_byId);
 app.delete('/api/books/:id', booksController.books_delete_byId);
 
