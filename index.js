@@ -19,7 +19,7 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use('/uploads',express.static('uploads'));
+app.use('/uploads', express.static('uploads'));
 
 const PORT = process.env.PORT || 80;
 
@@ -49,7 +49,7 @@ const upload = multer({
     limits: {
         fileSize: 1024 * 1024 * 5
     },
-    fileFilter:fileFilter
+    fileFilter: fileFilter
 }).single('bookImage')
 
 app.get('/', (req, res) => {
