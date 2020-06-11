@@ -17,11 +17,12 @@ exports.books_get_byId = async (req, res) => {
     res.send(book);
 }
 exports.books_create = (req, res) => {
+    
     // Validating the request body using joi
-    console.log("request", req.body);
+    console.log("request", req.file);
     const schema = Joi.object({
         title: Joi.string().min(3).required(),
-        author: Joi.string().min(3).required()
+        author: Joi.string().min(3).required(),
     });
     const result = schema.validate(req.body);
 
@@ -32,7 +33,8 @@ exports.books_create = (req, res) => {
     }
     const book = {
         title: req.body.title,
-        author: req.body.author
+        author: req.body.author,
+        bookImage:req.file.path
     };
 
     let model = new Book(book);
