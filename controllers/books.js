@@ -1,5 +1,12 @@
 import Book from '../models/bookModel';
 import Joi from '@hapi/joi';
+import cloudinary from 'cloudinary';
+import dotenv from 'dotenv';
+import multer from 'multer';
+import fileupload from 'express-fileupload'
+
+dotenv.config();
+
 
 exports.books_get_all = async (req, res) => {
     try {
@@ -19,7 +26,7 @@ exports.books_get_byId = async (req, res) => {
 exports.books_create = (req, res) => {
     
     // Validating the request body using joi
-    console.log("request", req.file);
+    console.log("request", req.files);
     const schema = Joi.object({
         title: Joi.string().min(3).required(),
         author: Joi.string().min(3).required(),
@@ -31,18 +38,31 @@ exports.books_create = (req, res) => {
         res.status(400).send(result.error.details[0].message);
         return;
     }
-    const book = {
-        title: req.body.title,
-        author: req.body.author,
-        bookImage:req.file.path
-    };
 
-    let model = new Book(book);
-    model.save().then((doc) => {
-        res.status(201).send(doc)
-    }).catch((err) => {
-        res.status(500).send(err)
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret:process.env.CLOUDINARY_API_SECRET
     })
+
+
+    const bookImage = req.files.bookImage;
+    console.log('bk', bookImage)
+    cloudinary.uploader.upload(bookImage.tempFilePath, (result, error)=>{
+        if(result){
+            let book = new Book(book);
+            book.title= req.body.title,
+            book.author= req.body.author,
+            book.bookImage = result.url;
+            book.save().then((doc) => {
+                res.status(201).send(doc)
+            }).catch((err) => {
+                res.status(500).send(err)
+            })
+        }
+        })
+    
+
 }
 
 exports.books_update_byId = async (req, res) => {
