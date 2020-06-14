@@ -2,11 +2,9 @@ import Book from '../models/bookModel';
 import Joi from '@hapi/joi';
 import cloudinary from 'cloudinary';
 import dotenv from 'dotenv';
-import multer from 'multer';
 import fileupload from 'express-fileupload'
 
 dotenv.config();
-
 
 exports.books_get_all = async (req, res) => {
     try {
@@ -48,7 +46,6 @@ exports.books_create = (req, res) => {
 
 
     const bookImage = req.files.bookImage;
-    console.log('bk', bookImage)
     cloudinary.uploader.upload(bookImage.tempFilePath, (result, error) => {
         if (result) {
             
@@ -70,6 +67,9 @@ exports.books_create = (req, res) => {
             }).catch((err) => {
                 res.status(500).send({ message: 'Something went wrong while processing your request', err })
             })
+        }
+        else{
+            res.send({message:"Something went wrong while processing your request"})
         }
     })
 
