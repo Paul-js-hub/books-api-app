@@ -24,7 +24,7 @@ exports.books_get_byId = async (req, res) => {
 exports.books_create = (req, res) => {
 
     // Validating the request body using joi
-    console.log("request", req.files);
+    //console.log("request", req.files);
     const schema = Joi.object({
         title: Joi.string().min(3).required(),
         author: Joi.string().min(3).required(),
@@ -55,13 +55,7 @@ exports.books_create = (req, res) => {
                 bookImage:result.url
             }
             const book = new Book(data);
-            // const {title, author, bookImage} = req.body
-            // const title = req.body.title,
-            // const author = req.body.author,
-            // const bookImage = result.url;
-            // const data = {
-                //title, author, bookImage
-            //}
+          
             book.save().then((doc) => {
                 res.status(201).send({ message: 'Your book has been successfully uploaded', doc })
             }).catch((err) => {
@@ -80,8 +74,9 @@ exports.books_update_byId = async (req, res) => {
 
     const book = await Book.updateOne(
         { _id: req.params.id },
-        { $set: { title: req.body.title } }
+        { $set: { title: req.body.title } },
     );
+  
     if (!book) res.status(404).send({message:'The book with that particular ID not found.', book});
 
     const { error } = validateBook(req.body); // result.error
