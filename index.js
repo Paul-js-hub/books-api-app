@@ -15,7 +15,10 @@ const app = express();
 // connect db
 dbConnection();
 app.disable('etag');
-app.use(cors());
+app.use(cors({
+    host: true,
+    methods: ['DELETE', 'GET', 'PUT', 'POST'],
+}));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -25,7 +28,6 @@ app.use(fileupload({
 
 
 const PORT = process.env.PORT || 80;
-
 
 app.get('/', (req, res) => {
     res.send('Hello Api!!!');
